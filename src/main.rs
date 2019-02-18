@@ -1,20 +1,27 @@
 #![no_std]
 #![no_main]
 
-// pick a panicking behavior
-extern crate panic_halt; // you can put a breakpoint on `rust_begin_unwind` to catch panics
-// extern crate panic_abort; // requires nightly
-// extern crate panic_itm; // logs messages over ITM; requires ITM support
-// extern crate panic_semihosting; // logs messages to the host stderr; requires a debugger
-
+use panic_halt;
 use cortex_m::asm;
 use cortex_m_rt::entry;
+use stm32f3::stm32f303;
 
 #[entry]
 fn main() -> ! {
-    asm::nop(); // To not have main optimize to abort in release mode, remove when you add code
+    // get handles to the hardware
+    let peripherals = stm32f303::Peripherals::take().unwrap();
+    let gpioc = &peripherals.GPIOC;
+    let rcc = &peripherals.RCC;
 
-    loop {
-        // your code goes here
+    // enable the GPIO clock for IO port C
+    rcc.ahbenr.write(|w| w.iopcen().set_bit());
+    gpioc.moder.write(|w| w.moder13().output());
+    gpioc.ospeedr.write(|w| w.ospeedr13().very_high_speed());
+
+    loop{
+        gpioc.bsrr.write(|w| w.bs13().set_bit());
+        asm::delay(2_000_000);
+        gpioc.brr.write(|w| w.br13().set_bit());
+        asm::delay(2_000_000);
     }
 }

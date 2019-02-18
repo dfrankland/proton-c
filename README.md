@@ -1,129 +1,122 @@
-# `cortex-m-quickstart`
+# proton-c
 
-> A template for building applications for ARM Cortex-M microcontrollers
+A quick example blinking the LED of the [QMK Proton C][qmk proton c].
 
-This project is developed and maintained by the [Cortex-M team][team].
+[qmk proton c]: https://qmk.fm/proton-c/
 
-## Dependencies
+![Proton C](images/proton-c.jpg)
 
-To build embedded programs using this template you'll need:
+## Hardware Setup
 
-- Rust 1.31, 1.30-beta, nightly-2018-09-13 or a newer toolchain. e.g. `rustup
-  default beta`
+Beyond the Proton C itself, it is highly recommended to setup a an ST-Link
+hardware debugger. It is also recommend to solder on header pins to hook up the
+ST-Link via a bread board. A soldering iron and solder may be needed to attach
+the header pins.
 
-- The `cargo generate` subcommand. [Installation
-  instructions](https://github.com/ashleygwilliams/cargo-generate#installation).
+### Hardware List
 
-- `rust-std` components (pre-compiled `core` crate) for the ARM Cortex-M
-  targets. Run:
+*   USB-C to USB-Whatever-Connects-to-the-Computer cable (one capable of data
+    transfer, required)
 
-``` console
-$ rustup target add thumbv6m-none-eabi thumbv7m-none-eabi thumbv7em-none-eabi thumbv7em-none-eabihf
+*   ST-Link Debugger (recommended)
+
+*   Female to female breadboard jumper cable wires (usually comes with the
+    ST-Link itself, recommended)
+
+*   Breadboard (recommended)
+
+*   2.54mm straight single row pin header strips (recommended)
+
+*   Male to male breadboard jumper cable wires (recommended)
+
+### Hooking up the ST-Link
+
+After the header pins are soldered up and the Proton C is attached to a
+breadboard, the ST-Link needs to be connected to the relevant debugging ports.
+Connect the following ports on the ST-Link to the ports on the Proton C:
+
+*   SWDIO: A13
+*   SWCLK: A14
+*   GND: GND
+*   5V: 5V
+
+### Connecting the Proton C to the Computer
+
+Connect the USB from the ST-Link and the cable connected to the USB-C port of
+the Proton C to the computer&mdash;both are needed.
+
+## Software Setup
+
+It should go without saying that Rust Nightly and Cargo are needed. To build,
+flash, and run a few other things need to be installed.
+
+### Rust Platform Target
+
+To build for the Pronton C, the `thumbv7em-none-eabihf` target is needed. You
+can install it running the following:
+
+```bash
+rustup target add thumbv7em-none-eabihf
 ```
 
-## Using this template
+### Other Dependencies
 
-**NOTE**: This is the very short version that only covers building programs. For
-the long version, which additionally covers flashing, running and debugging
-programs, check [the embedded Rust book][book].
+To flash and debug through the ST-Link, the following are needed:
 
-[book]: https://rust-embedded.github.io/book
+*   `openocd`
+*   `gdb-multiarch`
 
-0. Before we begin you need to identify some characteristics of the target
-  device as these will be used to configure the project:
+For operating systems other than Ubuntu / Debian-based distros, these may be
+installed under different names.
 
-- The ARM core. e.g. Cortex-M3.
+## Running
 
-- Does the ARM core include an FPU? Cortex-M4**F** and Cortex-M7**F** cores do.
+The setup to build, flash, debug, and reset needs 3 different terminals:
 
-- How much Flash memory and RAM does the target device has? e.g. 256 KiB of
-  Flash and 32 KiB of RAM.
+1.  1 terminal to run the OpenOCD server
+2.  1 terminal to build, flash, and run debugging using GDB
+3.  1 terminal to reset the Proton C after flashing
 
-- Where are Flash memory and RAM mapped in the address space? e.g. RAM is
-  commonly located at address `0x2000_0000`.
+### Running the OpenOCD Server
 
-You can find this information in the data sheet or the reference manual of your
-device.
+To run the server with correct configuration change directory to where this
+repo is located, then run:
 
-In this example we'll be using the STM32F3DISCOVERY. This board contains an
-STM32F303VCT6 microcontroller. This microcontroller has:
-
-- A Cortex-M4F core that includes a single precision FPU
-
-- 256 KiB of Flash located at address 0x0800_0000.
-
-- 40 KiB of RAM located at address 0x2000_0000. (There's another RAM region but
-  for simplicity we'll ignore it).
-
-1. Instantiate the template.
-
-``` console
-$ cargo generate --git https://github.com/rust-embedded/cortex-m-quickstart
- Project Name: app
- Creating project called `app`...
- Done! New project created /tmp/app
-
-$ cd app
+```bash
+openocd
 ```
 
-2. Set a default compilation target. There are four options as mentioned at the
-   bottom of `.cargo/config`. For the STM32F303VCT6, which has a Cortex-M4F
-   core, we'll pick the `thumbv7em-none-eabihf` target.
+This server will be used by the other terminals to interact and send commands to
+the Proton C.
 
-``` console
-$ tail -n6 .cargo/config
+### Building, Flashing, and Debugging
+
+Cargo is configured to build, flash, and start debugging in this repo, simply
+run:
+
+```bash
+cargo run
 ```
 
-``` toml
-[build]
-# Pick ONE of these compilation targets
-# target = "thumbv6m-none-eabi"    # Cortex-M0 and Cortex-M0+
-# target = "thumbv7m-none-eabi"    # Cortex-M3
-# target = "thumbv7em-none-eabi"   # Cortex-M4 and Cortex-M7 (no FPU)
-target = "thumbv7em-none-eabihf" # Cortex-M4F and Cortex-M7F (with FPU)
-```
+...and everything will get started. Once this is completed you will need to
+reset the Proton C, see instructions on resetting below. To stop debugging,
+enter the command: `quit`.
 
-3. Enter the memory region information into the `memory.x` file.
+### Resetting
 
-``` console
-$ cat memory.x
-/* Linker script for the STM32F303VCT6 */
-MEMORY
-{
-  /* NOTE 1 K = 1 KiBi = 1024 bytes */
-  FLASH : ORIGIN = 0x08000000, LENGTH = 256K
-  RAM : ORIGIN = 0x20000000, LENGTH = 40K
-}
-```
+After a program has been flashed to the Proton C, it needs to be reset. This can
+normally be done by unplugging any power sources and power cycling the Proton C,
+but to make life easier you can use the ST-Link and OpenOCD to instruct the
+Proton C to reset.
 
-4. Build the template application or one of the examples.
+1.  Connect to the OpenOCD server:
 
-``` console
-$ cargo build
-```
+    ```bash
+    telnet localhost 4444
+    ```
 
-# License
+2.  Reset whenever needed:
 
-This template is licensed under either of
-
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or
-  http://www.apache.org/licenses/LICENSE-2.0)
-
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
-
-at your option.
-
-## Contribution
-
-Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
-dual licensed as above, without any additional terms or conditions.
-
-## Code of Conduct
-
-Contribution to this crate is organized under the terms of the [Rust Code of
-Conduct][CoC], the maintainer of this crate, the [Cortex-M team][team], promises
-to intervene to uphold that code of conduct.
-
-[CoC]: https://www.rust-lang.org/policies/code-of-conduct
-[team]: https://github.com/rust-embedded/wg#the-cortex-m-team
+    ```bash
+    reset run
+    ```

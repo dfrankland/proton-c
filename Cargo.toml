@@ -10,13 +10,16 @@ name = "proton-c"
 test = false
 
 [dependencies]
-cortex-m = "0.5.8"
-cortex-m-rt = "0.6.5"
-cortex-m-semihosting = "0.3.2"
-panic-halt = "0.2.0"
-stm32f3 = { version = "0.6.0", features = ["stm32f303", "rt"] }
-[profile.release]
-codegen-units = 1
-debug = true
+stm32f3xx-hal = { version = "0.1.2", features = ["rt", "stm32f303"] }
+panic-semihosting = "0.5.1"
+cortex-m-rtfm = { version = "0.4.2", features = ["timer-queue"] }
+embedded-hal = "0.2.2"
+[profile.dev]
+opt-level = 1
 lto = true
-opt-level = "s"
+incremental = false
+[profile.release]
+lto = true
+incremental = false
+opt-level = "z"
+debug = true

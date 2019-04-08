@@ -6,10 +6,8 @@ extern crate panic_semihosting;
 use embedded_hal::digital::OutputPin;
 use rtfm::{app, Instant};
 use stm32f3xx_hal::{
-    flash::FlashExt,
     gpio::{gpioc, GpioExt, Output, PushPull},
     rcc::RccExt,
-    time::U32Ext,
 };
 
 const PERIOD: u32 = 2_000_000;
@@ -20,14 +18,7 @@ const APP: () = {
 
     #[init(schedule = [led_on])]
     fn init() -> init::LateResources {
-        let mut flash = device.FLASH.constrain();
         let mut rcc = device.RCC.constrain();
-
-        rcc.cfgr
-            .hclk(8_u32.mhz())
-            .sysclk(48_u32.mhz())
-            .pclk1(24_u32.mhz())
-            .freeze(&mut flash.acr);
 
         let mut gpioc = device.GPIOC.split(&mut rcc.ahb);
         let led = gpioc

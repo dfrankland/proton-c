@@ -4,7 +4,7 @@ A quick example blinking the LED of the [QMK Proton C][qmk proton c].
 
 [qmk proton c]: https://qmk.fm/proton-c/
 
-![Proton C](images/proton-c.jpg)
+![Proton C](images/proton-c-input-button-breadboard.jpg)
 
 ![Proton C Pinout](images/proton-c-pinout.jpg)
 

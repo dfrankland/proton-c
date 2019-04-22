@@ -10,7 +10,7 @@ name = "proton-c"
 test = false
 
 [dependencies]
-stm32f3xx-hal = { version = "0.1.2", features = ["rt", "stm32f303"] }
+stm32f3xx-hal = { version = "0.1.3", features = ["rt", "stm32f303", "unproven"] }
 panic-semihosting = "0.5.1"
 cortex-m-rtfm = { version = "0.4.2", features = ["timer-queue"] }
 embedded-hal = "0.2.2"

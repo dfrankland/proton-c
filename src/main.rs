@@ -3,43 +3,49 @@
 
 extern crate panic_semihosting;
 
-use embedded_hal::digital::OutputPin;
+use embedded_hal::digital::{InputPin, OutputPin};
 use rtfm::{app, Instant};
 use stm32f3xx_hal::{
-    gpio::{gpioc, GpioExt, Output, PushPull},
+    gpio::{gpiob, gpioc, GpioExt, Input, Output, PullUp, PushPull},
     rcc::RccExt,
 };
 
-const PERIOD: u32 = 2_000_000;
-
 #[app(device = stm32f3xx_hal::stm32)]
 const APP: () = {
+    static mut BUTTON: gpiob::PB11<Input<PullUp>> = ();
     static mut LED: gpioc::PC13<Output<PushPull>> = ();
 
-    #[init(schedule = [led_on])]
+    #[init(schedule = [button_check])]
     fn init() -> init::LateResources {
         let mut rcc = device.RCC.constrain();
 
+        let mut gpiob = device.GPIOB.split(&mut rcc.ahb);
         let mut gpioc = device.GPIOC.split(&mut rcc.ahb);
+
+        let button = gpiob
+            .pb11
+            .into_pull_up_input(&mut gpiob.moder, &mut gpiob.pupdr);
         let led = gpioc
             .pc13
             .into_push_pull_output(&mut gpioc.moder, &mut gpioc.otyper);
 
-        schedule.led_on(Instant::now()).unwrap();
+        schedule.button_check(Instant::now()).unwrap();
 
-        init::LateResources { LED: led }
+        init::LateResources {
+            LED: led,
+            BUTTON: button,
+        }
     }
 
-    #[task(schedule = [led_off], resources = [LED])]
-    fn led_on() {
-        resources.LED.set_high();
-        schedule.led_off(scheduled + PERIOD.cycles()).unwrap();
-    }
+    #[task(schedule = [button_check], resources = [BUTTON, LED])]
+    fn button_check() {
+        if resources.BUTTON.is_low() {
+            resources.LED.set_high();
+        } else {
+            resources.LED.set_low();
+        }
 
-    #[task(schedule = [led_on], resources = [LED])]
-    fn led_off() {
-        resources.LED.set_low();
-        schedule.led_on(scheduled + PERIOD.cycles()).unwrap();
+        schedule.button_check(Instant::now()).unwrap();
     }
 
     extern "C" {

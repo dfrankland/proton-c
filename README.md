@@ -6,6 +6,8 @@ A quick example blinking the LED of the [QMK Proton C][qmk proton c].
 
 ![Proton C](images/proton-c.jpg)
 
+![Proton C Pinout](images/proton-c-pinout.jpg)
+
 ## Hardware Setup
 
 Beyond the Proton C itself, it is highly recommended to setup a an ST-Link

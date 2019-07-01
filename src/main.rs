@@ -3,7 +3,7 @@
 
 extern crate panic_semihosting;
 
-use embedded_hal::digital::OutputPin;
+use embedded_hal::digital::v2::OutputPin;
 use rtfm::{app, Instant};
 use stm32f3xx_hal::{
     gpio::{gpioc, GpioExt, Output, PushPull},
@@ -32,13 +32,13 @@ const APP: () = {
 
     #[task(schedule = [led_off], resources = [LED])]
     fn led_on() {
-        resources.LED.set_high();
+        resources.LED.set_high().unwrap();
         schedule.led_off(scheduled + PERIOD.cycles()).unwrap();
     }
 
     #[task(schedule = [led_on], resources = [LED])]
     fn led_off() {
-        resources.LED.set_low();
+        resources.LED.set_low().unwrap();
         schedule.led_on(scheduled + PERIOD.cycles()).unwrap();
     }
 

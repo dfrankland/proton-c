@@ -5,11 +5,6 @@ name = "proton-c"
 readme = "README.md"
 version = "0.1.0"
 
-[[bin]]
-bench = false
-name = "proton-c"
-test = false
-
 [dependencies]
 # stm32f3xx-hal = { version = "0.1.2", features = ["rt", "stm32f303"] }
 stm32f3xx-hal = { git = "https://github.com/dfrankland/stm32f3xx-hal", branch = "update-stm32f3", features = ["rt", "stm32f303", "unproven"] }

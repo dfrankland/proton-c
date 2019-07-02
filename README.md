@@ -1,8 +1,8 @@
 # proton-c
 
-A quick example blinking the LED of the [QMK Proton C][qmk proton c].
+Board Support Crate for the [Proton C][].
 
-[qmk proton c]: https://qmk.fm/proton-c/
+[Proton C]: https://qmk.fm/proton-c/
 
 ![Proton C](images/proton-c.jpg)
 

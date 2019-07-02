@@ -13,9 +13,7 @@ version = "0.1.0"
 
 [dependencies]
 embedded-hal = "0.2.3"
-
-[dependencies.stm32f3xx-hal]
-version = "0.2.0"
+stm32f3xx-hal = { version = "0.2.0", features = ["stm32f303"] }
 
 [dev-dependencies]
 panic-semihosting = "0.5.2"

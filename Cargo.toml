@@ -10,6 +10,7 @@ readme = "README.md"
 repository = "https://github.com/dfrankland/proton-c"
 documentation = "https://docs.rs/proton-c"
 version = "0.1.0"
+exclude = ["images/**/*"]
 
 [dependencies]
 embedded-hal = "0.2.3"

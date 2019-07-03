@@ -17,8 +17,14 @@ embedded-hal = "0.2.3"
 stm32f3xx-hal = { version = "0.2.0", features = ["rt", "stm32f303"] }
 
 [dev-dependencies]
-panic-semihosting = "0.5.2"
+cortex-m = "0.6.0"
 cortex-m-rtfm = { version = "0.4.3", features = ["timer-queue"] }
+cortex-m-semihosting = "0.3.3"
+either = { version = "1.5.2", default-features = false }
+panic-semihosting = "0.5.2"
+# stm32-usbd = { version = "0.2.1", features = ["stm32f303xc"] }
+stm32-usbd = { path = "../stm32-usbd", features = ["stm32f303xc"] }
+usb-device = "0.2.1"
 
 [dev-dependencies.stm32f3xx-hal]
 version = "0.2.0"

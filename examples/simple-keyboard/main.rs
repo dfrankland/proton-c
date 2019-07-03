@@ -80,18 +80,7 @@ const APP: () = {
 
     #[task(schedule = [button_check], resources = [MATRIX])]
     fn button_check() {
-        let mut cols = [false; 1];
-
-        for c in resources.MATRIX.rows.iter_mut() {
-            c.set_low().unwrap();
-            delay(5 * 48); // 5µs
-            for (index, r) in resources.MATRIX.cols.iter().enumerate() {
-                cols[index] = r.is_low().unwrap();
-            }
-            c.set_high().unwrap();
-        }
-
-        dbg!(cols);
+        dbg!(resources.MATRIX.pressed_keys());
 
         schedule.button_check(Instant::now()).unwrap();
     }
@@ -104,4 +93,21 @@ const APP: () = {
 pub struct Matrix<T: OutputPin, U: InputPin> {
     pub rows: [T; 1],
     pub cols: [U; 1],
+}
+
+impl<T: OutputPin<Error=()>, U: InputPin<Error=()>> Matrix<T, U> {
+    pub fn pressed_keys(&mut self) -> [bool; 1] {
+        let mut cols = [false; 1];
+
+        for c in self.rows.iter_mut() {
+            c.set_low().unwrap();
+            delay(5 * 48); // 5µs
+            for (index, r) in self.cols.iter().enumerate() {
+                cols[index] = r.is_low().unwrap();
+            }
+            c.set_high().unwrap();
+        }
+
+        cols
+    }
 }

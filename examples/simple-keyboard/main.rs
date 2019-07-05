@@ -29,14 +29,14 @@ macro_rules! dbg {
 
 pub mod matrix;
 
-use crate::matrix::{Matrix, MatrixGpioB};
+use crate::matrix::Matrix;
 use proton_c::led::Led;
 use rtfm::{app, Instant};
 use stm32f3xx_hal::prelude::*;
 
 #[app(device = stm32f3xx_hal::stm32)]
 const APP: () = {
-    static mut MATRIX: MatrixGpioB = ();
+    static mut MATRIX: Matrix = ();
 
     #[init(schedule = [button_check])]
     fn init() -> init::LateResources {
@@ -58,21 +58,25 @@ const APP: () = {
 
         schedule.button_check(Instant::now()).unwrap();
 
+        let matrix = Matrix::new(
+            [
+                Some(gpiob
+                    .pb11
+                    .into_push_pull_output(&mut gpiob.moder, &mut gpiob.otyper)
+                    .downgrade()
+                    .downgrade())
+            ],
+            [
+                Some(gpiob
+                    .pb12
+                    .into_pull_up_input(&mut gpiob.moder, &mut gpiob.pupdr)
+                    .downgrade()
+                    .downgrade())
+            ],
+        );
+
         init::LateResources {
-            MATRIX: Matrix {
-                rows: [
-                    gpiob
-                        .pb11
-                        .into_push_pull_output(&mut gpiob.moder, &mut gpiob.otyper)
-                        .downgrade()
-                ],
-                cols: [
-                    gpiob
-                        .pb12
-                        .into_pull_up_input(&mut gpiob.moder, &mut gpiob.pupdr)
-                        .downgrade()
-                ],
-            },
+            MATRIX: matrix,
         }
     }
 

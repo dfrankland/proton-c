@@ -1,6 +1,6 @@
 use cortex_m::asm::delay;
-use embedded_hal::digital::v2::{OutputPin, InputPin};
-use stm32f3xx_hal::gpio::{PXx, Output, Input, PushPull, PullUp};
+use embedded_hal::digital::v2::{InputPin, OutputPin};
+use stm32f3xx_hal::gpio::{Input, Output, PXx, PullUp, PushPull};
 
 macro_rules! matrix {
     ($rows:tt, $cols:tt) => {
@@ -40,7 +40,7 @@ macro_rules! matrix {
                 Ok(pressed_keys)
             }
         }
-    }
+    };
 }
 
 matrix!(1, 1);

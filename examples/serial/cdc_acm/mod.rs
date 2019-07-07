@@ -1,6 +1,5 @@
 /// Minimal and incomplete CDC-ACM implementation for the examples - this will eventually be a real
 /// crate!
-
 use core::cmp::min;
 use usb_device::class_prelude::*;
 use usb_device::Result;
@@ -88,31 +87,26 @@ impl<B: UsbBus> UsbClass<B> for SerialPort<'_, B> {
             self.comm_if,
             USB_CLASS_CDC,
             CDC_SUBCLASS_ACM,
-            CDC_PROTOCOL_AT)?;
+            CDC_PROTOCOL_AT,
+        )?;
+
+        writer.write(CS_INTERFACE, &[CDC_TYPE_HEADER, 0x10, 0x01])?;
 
         writer.write(
             CS_INTERFACE,
-            &[CDC_TYPE_HEADER, 0x10, 0x01])?;
+            &[CDC_TYPE_CALL_MANAGEMENT, 0x00, self.data_if.into()],
+        )?;
+
+        writer.write(CS_INTERFACE, &[CDC_TYPE_ACM, 0x00])?;
 
         writer.write(
             CS_INTERFACE,
-            &[CDC_TYPE_CALL_MANAGEMENT, 0x00, self.data_if.into()])?;
-
-        writer.write(
-            CS_INTERFACE,
-            &[CDC_TYPE_ACM, 0x00])?;
-
-        writer.write(
-            CS_INTERFACE,
-            &[CDC_TYPE_UNION, self.comm_if.into(), self.data_if.into()])?;
+            &[CDC_TYPE_UNION, self.comm_if.into(), self.data_if.into()],
+        )?;
 
         writer.endpoint(&self.comm_ep)?;
 
-        writer.interface(
-            self.data_if,
-            USB_CLASS_DATA,
-            0x00,
-            0x00)?;
+        writer.interface(self.data_if, USB_CLASS_DATA, 0x00, 0x00)?;
 
         writer.endpoint(&self.write_ep)?;
         writer.endpoint(&self.read_ep)?;

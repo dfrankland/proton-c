@@ -7,14 +7,21 @@ pub mod hid;
 pub mod keyboard;
 pub mod matrix;
 
-use crate::{matrix::Matrix, keyboard::Keyboard};
+use crate::{keyboard::Keyboard, matrix::Matrix};
 use cortex_m::asm::delay;
 use embedded_hal::digital::v2::OutputPin;
 use proton_c::led::Led;
 use rtfm::app;
-use stm32f3xx_hal::{stm32, prelude::*, timer, gpio::{AF14, gpioa::{PA11, PA12}}};
 use stm32_usbd::{UsbBus, UsbPinsType};
-use usb_device::{class::UsbClass, bus, prelude::*};
+use stm32f3xx_hal::{
+    gpio::{
+        gpioa::{PA11, PA12},
+        AF14,
+    },
+    prelude::*,
+    stm32, timer,
+};
+use usb_device::{bus, class::UsbClass, prelude::*};
 
 type KeyboardHidClass = hid::HidClass<'static, UsbBus<UsbPinsType>, Keyboard>;
 type Stm32F303UsbBus = UsbBus<UsbPinsType>;
@@ -53,7 +60,9 @@ const APP: () = {
         led.on().expect("Couldn't turn the LED on!");
 
         // Pull the D+ pin down to send a RESET condition to the USB bus.
-        let mut usb_dp = gpioa.pa12.into_push_pull_output(&mut gpioa.moder, &mut gpioa.otyper);
+        let mut usb_dp = gpioa
+            .pa12
+            .into_push_pull_output(&mut gpioa.moder, &mut gpioa.otyper);
         usb_dp.set_low().expect("Couldn't reset the USB bus!");
         delay(clocks.sysclk().0 / 100);
 
@@ -62,11 +71,10 @@ const APP: () = {
 
         configure_usb_clock();
 
-        *USB_BUS = Some(UsbBus::new(
-            device.USB,
-            (usb_dm, usb_dp)
-        ));
-        let usb_bus = USB_BUS.as_ref().expect("Couldn't make the USB_BUS a static reference!");
+        *USB_BUS = Some(UsbBus::new(device.USB, (usb_dm, usb_dp)));
+        let usb_bus = USB_BUS
+            .as_ref()
+            .expect("Couldn't make the USB_BUS a static reference!");
 
         let usb_class = hid::HidClass::new(Keyboard::new(led), &usb_bus);
         let usb_dev = UsbDeviceBuilder::new(usb_bus, UsbVidPid(VID, PID))
@@ -83,21 +91,21 @@ const APP: () = {
             USB_DEV: usb_dev,
             USB_CLASS: usb_class,
             TIMER: timer,
-            MATRIX:  Matrix::new(
-                [
-                    Some(gpiob
+            MATRIX: Matrix::new(
+                [Some(
+                    gpiob
                         .pb11
                         .into_push_pull_output(&mut gpiob.moder, &mut gpiob.otyper)
                         .downgrade()
-                        .downgrade())
-                ],
-                [
-                    Some(gpiob
+                        .downgrade(),
+                )],
+                [Some(
+                    gpiob
                         .pb12
                         .into_pull_up_input(&mut gpiob.moder, &mut gpiob.pupdr)
                         .downgrade()
-                        .downgrade())
-                ],
+                        .downgrade(),
+                )],
             ),
         }
     }
@@ -116,15 +124,21 @@ const APP: () = {
     fn TIM3() {
         resources.TIMER.clear_update_interrupt_flag();
 
-        let key_pressed = resources.MATRIX.pressed_keys().expect("Couldn't poll pressed keys!")[0][0];
-        resources.USB_CLASS.lock(|k| {
-            // Type the character `a`
-            if key_pressed {
-                k.write(&[0, 0, 4, 0, 0, 0, 0, 0])
-            } else {
-                k.write(&[0, 0, 0, 0, 0, 0, 0, 0])
-            }
-        }).expect("Couldn't get access to USB_CLASS!");
+        let key_pressed = resources
+            .MATRIX
+            .pressed_keys()
+            .expect("Couldn't poll pressed keys!")[0][0];
+        resources
+            .USB_CLASS
+            .lock(|k| {
+                // Type the character `a`
+                if key_pressed {
+                    k.write(&[0, 0, 4, 0, 0, 0, 0, 0])
+                } else {
+                    k.write(&[0, 0, 0, 0, 0, 0, 0, 0])
+                }
+            })
+            .expect("Couldn't get access to USB_CLASS!");
     }
 };
 
@@ -133,7 +147,10 @@ fn configure_usb_clock() {
     rcc.cfgr.modify(|_, w| w.usbpre().set_bit());
 }
 
-fn usb_poll(usb_dev: &mut UsbDevice<'static, UsbBus<(PA11<AF14>, PA12<AF14>)>>, keyboard: &mut KeyboardHidClass) {
+fn usb_poll(
+    usb_dev: &mut UsbDevice<'static, UsbBus<(PA11<AF14>, PA12<AF14>)>>,
+    keyboard: &mut KeyboardHidClass,
+) {
     if usb_dev.poll(&mut [keyboard]) {
         keyboard.poll();
     }

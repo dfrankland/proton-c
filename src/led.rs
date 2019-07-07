@@ -1,5 +1,5 @@
-use embedded_hal::digital::v2::OutputPin;
 use crate::hal::gpio::{gpioc, Output, PushPull};
+use embedded_hal::digital::v2::OutputPin;
 
 /// Abstraction for the only LED on the board
 pub struct Led {

@@ -7,10 +7,10 @@ extern crate panic_semihosting;
 mod cdc_acm;
 
 use cortex_m::asm::delay;
-use rtfm::app;
-use stm32f3xx_hal::{stm32, prelude::*};
 use embedded_hal::digital::v2::OutputPin;
+use rtfm::app;
 use stm32_usbd::{UsbBus, UsbBusType};
+use stm32f3xx_hal::{prelude::*, stm32};
 use usb_device::{bus, prelude::*};
 
 #[app(device = stm32f3xx_hal::stm32)]
@@ -35,12 +35,16 @@ const APP: () = {
         let mut gpioa = device.GPIOA.split(&mut rcc.ahb);
         let mut gpioc = device.GPIOC.split(&mut rcc.ahb);
 
-        let mut led = gpioc.pc13.into_push_pull_output(&mut gpioc.moder, &mut gpioc.otyper);
+        let mut led = gpioc
+            .pc13
+            .into_push_pull_output(&mut gpioc.moder, &mut gpioc.otyper);
         led.set_high().unwrap();
 
         // Proton C board has a pull-up resistor on the D+ line.
         // Pull the D+ pin down to send a RESET condition to the USB bus.
-        let mut usb_dp = gpioa.pa12.into_push_pull_output(&mut gpioa.moder, &mut gpioa.otyper);
+        let mut usb_dp = gpioa
+            .pa12
+            .into_push_pull_output(&mut gpioa.moder, &mut gpioa.otyper);
         usb_dp.set_low().unwrap();
         delay(clocks.sysclk().0 / 100);
 
@@ -53,13 +57,12 @@ const APP: () = {
 
         let serial = cdc_acm::SerialPort::new(USB_BUS.as_ref().unwrap());
 
-        let usb_dev =
-            UsbDeviceBuilder::new(USB_BUS.as_ref().unwrap(), UsbVidPid(0x5824, 0x27dd))
-                .manufacturer("Fake company")
-                .product("Serial port")
-                .serial_number("TEST")
-                .device_class(cdc_acm::USB_CLASS_CDC)
-                .build();
+        let usb_dev = UsbDeviceBuilder::new(USB_BUS.as_ref().unwrap(), UsbVidPid(0x5824, 0x27dd))
+            .manufacturer("Fake company")
+            .product("Serial port")
+            .serial_number("TEST")
+            .device_class(cdc_acm::USB_CLASS_CDC)
+            .build();
 
         USB_DEV = usb_dev;
         SERIAL = serial;

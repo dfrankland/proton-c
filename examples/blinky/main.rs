@@ -5,10 +5,7 @@ extern crate panic_semihosting;
 
 use proton_c::led::Led;
 use rtfm::{app, Instant};
-use stm32f3xx_hal::{
-    gpio::GpioExt,
-    rcc::RccExt,
-};
+use stm32f3xx_hal::{gpio::GpioExt, rcc::RccExt};
 
 const PERIOD: u32 = 2_000_000;
 

@@ -29,11 +29,11 @@ macro_rules! dbg {
     };
 }
 
+use alloc::{string::String, vec::Vec};
+use alloc_cortex_m::CortexMHeap;
 use proton_c::led::Led;
 use rtfm::{app, Instant};
 use stm32f3xx_hal::prelude::*;
-use alloc::{vec::Vec, string::String};
-use alloc_cortex_m::CortexMHeap;
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
@@ -51,8 +51,7 @@ const APP: () = {
         let mut flash = device.FLASH.constrain();
         let mut rcc = device.RCC.constrain();
 
-        rcc
-            .cfgr
+        rcc.cfgr
             .sysclk(48.mhz())
             .pclk1(24.mhz())
             .pclk2(24.mhz())

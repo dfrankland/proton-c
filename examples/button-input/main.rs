@@ -3,8 +3,8 @@
 
 extern crate panic_semihosting;
 
-use proton_c::led::Led;
 use embedded_hal::digital::v2::InputPin;
+use proton_c::led::Led;
 use rtfm::{app, Instant};
 use stm32f3xx_hal::{
     gpio::{gpiob, GpioExt, Input, PullUp},

@@ -1,10 +1,9 @@
 use crate::hal::gpio::{gpioc, Output, PushPull};
-use embedded_hal::digital::v2::OutputPin;
+use core::ops::{Deref, DerefMut};
 
 /// Abstraction for the only LED on the board
 pub struct Led {
     pcx: gpioc::PCx<Output<PushPull>>,
-    on: bool,
 }
 
 impl Led {
@@ -16,22 +15,19 @@ impl Led {
 
         led.into()
     }
+}
 
-    /// Turns the LED off
-    pub fn off(&mut self) -> Result<(), ()> {
-        self.on = false;
-        self.pcx.set_low()
+impl Deref for Led {
+    type Target = gpioc::PCx<Output<PushPull>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.pcx
     }
+}
 
-    /// Turns the LED on
-    pub fn on(&mut self) -> Result<(), ()> {
-        self.on = true;
-        self.pcx.set_high()
-    }
-
-    /// Check the LED
-    pub fn is_on(&self) -> bool {
-        self.on
+impl DerefMut for Led {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.pcx
     }
 }
 
@@ -42,7 +38,6 @@ impl Into<Led> for LED {
     fn into(self) -> Led {
         Led {
             pcx: self.downgrade(),
-            on: false,
         }
     }
 }

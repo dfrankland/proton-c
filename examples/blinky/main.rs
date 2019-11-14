@@ -3,9 +3,10 @@
 
 extern crate panic_semihosting;
 
+use embedded_hal::digital::v2::OutputPin;
 use proton_c::led::Led;
 use rtfm::{app, Instant};
-use stm32f3xx_hal::{gpio::GpioExt, rcc::RccExt};
+use stm32f3xx_hal::{prelude::*, gpio::GpioExt, rcc::RccExt};
 
 const PERIOD: u32 = 2_000_000;
 
@@ -13,28 +14,26 @@ const PERIOD: u32 = 2_000_000;
 const APP: () = {
     static mut LED: Led = ();
 
-    #[init(schedule = [led_on])]
+    #[init(schedule = [led_toggle])]
     fn init() -> init::LateResources {
         let mut rcc = device.RCC.constrain();
 
         let gpioc = device.GPIOC.split(&mut rcc.ahb);
         let led = Led::new(gpioc);
 
-        schedule.led_on(Instant::now()).unwrap();
+        schedule.led_toggle(Instant::now()).unwrap();
 
         init::LateResources { LED: led }
     }
 
-    #[task(schedule = [led_off], resources = [LED])]
-    fn led_on() {
-        resources.LED.on().unwrap();
-        schedule.led_off(scheduled + PERIOD.cycles()).unwrap();
-    }
-
-    #[task(schedule = [led_on], resources = [LED])]
-    fn led_off() {
-        resources.LED.off().unwrap();
-        schedule.led_on(scheduled + PERIOD.cycles()).unwrap();
+    #[task(schedule = [led_toggle], resources = [LED])]
+    fn led_toggle() {
+        if resources.LED.is_set_low().unwrap() {
+            resources.LED.set_high().unwrap();
+        } else {
+            resources.LED.set_low().unwrap();
+        }
+        schedule.led_toggle(scheduled + PERIOD.cycles()).unwrap();
     }
 
     extern "C" {

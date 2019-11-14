@@ -14,7 +14,7 @@ exclude = ["images/**/*"]
 
 [dependencies]
 embedded-hal = "0.2.3"
-stm32f3xx-hal = { git = "https://github.com/dfrankland/stm32f3xx-hal", branch = "gpio_afi_macro", features = ["rt", "stm32f303xc"] }
+stm32f3xx-hal = { git = "https://github.com/dfrankland/stm32f3xx-hal", branch = "stateful", features = ["rt", "stm32f303xc"] }
 
 [dev-dependencies]
 alloc-cortex-m = "0.3.5"
@@ -29,10 +29,10 @@ usb-device = "0.2.3"
 # version = "0.2.3"
 features = ["rt", "stm32f303xc", "unproven", "stm32-usbd"]
 git = "https://github.com/dfrankland/stm32f3xx-hal"
-branch = "gpio_afi_macro"
+branch = "stateful"
 
 [patch.crates-io]
-stm32f3xx-hal = { git = "https://github.com/dfrankland/stm32f3xx-hal", branch = "gpio_afi_macro", features = ["rt", "stm32f303xc", "unproven", "stm32-usbd"] }
+stm32f3xx-hal = { git = "https://github.com/dfrankland/stm32f3xx-hal", branch = "stateful", features = ["rt", "stm32f303xc", "unproven", "stm32-usbd"] }
 
 [features]
 default = ["rt"]

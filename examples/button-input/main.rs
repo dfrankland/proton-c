@@ -7,6 +7,7 @@ use embedded_hal::digital::v2::InputPin;
 use proton_c::led::Led;
 use rtfm::{app, Instant};
 use stm32f3xx_hal::{
+    prelude::*,
     gpio::{gpiob, GpioExt, Input, PullUp},
     rcc::RccExt,
 };
@@ -39,9 +40,9 @@ const APP: () = {
     #[task(schedule = [button_check], resources = [BUTTON, LED])]
     fn button_check() {
         if resources.BUTTON.is_low().unwrap() {
-            resources.LED.on().unwrap();
+            resources.LED.set_high().unwrap();
         } else {
-            resources.LED.off().unwrap();
+            resources.LED.set_low().unwrap();
         }
 
         schedule.button_check(Instant::now()).unwrap();

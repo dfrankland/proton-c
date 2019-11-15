@@ -9,22 +9,17 @@ pub mod matrix;
 
 use crate::{keyboard::Keyboard, matrix::Matrix};
 use cortex_m::asm::delay;
-use embedded_hal::digital::v2::OutputPin;
 use proton_c::led::Led;
 use rtfm::app;
-use stm32_usbd::{UsbBus, UsbPinsType};
 use stm32f3xx_hal::{
-    gpio::{
-        gpioa::{PA11, PA12},
-        AF14,
-    },
     prelude::*,
     stm32, timer,
+    usb::{Peripheral, UsbBus},
 };
 use usb_device::{bus, class::UsbClass, prelude::*};
 
-type KeyboardHidClass = hid::HidClass<'static, UsbBus<UsbPinsType>, Keyboard>;
-type Stm32F303UsbBus = UsbBus<UsbPinsType>;
+type KeyboardHidClass = hid::HidClass<'static, UsbBus<Peripheral>, Keyboard>;
+type Stm32F303UsbBus = UsbBus<Peripheral>;
 
 // Generic keyboard from
 // https://github.com/obdev/v-usb/blob/master/usbdrv/USB-IDs-for-free.txt
@@ -47,17 +42,20 @@ const APP: () = {
 
         let clocks = rcc
             .cfgr
+            .use_hse(8.mhz())
             .sysclk(48.mhz())
             .pclk1(24.mhz())
             .pclk2(24.mhz())
             .freeze(&mut flash.acr);
+
+        assert!(clocks.usbclk_valid());
 
         let mut gpioa = device.GPIOA.split(&mut rcc.ahb);
         let mut gpiob = device.GPIOB.split(&mut rcc.ahb);
         let gpioc = device.GPIOC.split(&mut rcc.ahb);
 
         let mut led = Led::new(gpioc);
-        led.on().expect("Couldn't turn the LED on!");
+        led.set_high().expect("Couldn't turn the LED on!");
 
         // Pull the D+ pin down to send a RESET condition to the USB bus.
         let mut usb_dp = gpioa
@@ -69,15 +67,18 @@ const APP: () = {
         let usb_dm = gpioa.pa11.into_af14(&mut gpioa.moder, &mut gpioa.afrh);
         let usb_dp = usb_dp.into_af14(&mut gpioa.moder, &mut gpioa.afrh);
 
-        configure_usb_clock();
-
-        *USB_BUS = Some(UsbBus::new(device.USB, (usb_dm, usb_dp)));
+        let usb = Peripheral {
+            usb: device.USB,
+            pin_dm: usb_dm,
+            pin_dp: usb_dp,
+        };
+        *USB_BUS = Some(UsbBus::new(usb));
         let usb_bus = USB_BUS
             .as_ref()
             .expect("Couldn't make the USB_BUS a static reference!");
 
         let usb_class = hid::HidClass::new(Keyboard::new(led), &usb_bus);
-        let usb_dev = UsbDeviceBuilder::new(usb_bus, UsbVidPid(VID, PID))
+        let usb_dev = UsbDeviceBuilder::new(&usb_bus, UsbVidPid(VID, PID))
             .manufacturer("dfrankland")
             .product("Proton-C")
             .serial_number(env!("CARGO_PKG_VERSION"))
@@ -142,13 +143,8 @@ const APP: () = {
     }
 };
 
-fn configure_usb_clock() {
-    let rcc = unsafe { &*stm32::RCC::ptr() };
-    rcc.cfgr.modify(|_, w| w.usbpre().set_bit());
-}
-
 fn usb_poll(
-    usb_dev: &mut UsbDevice<'static, UsbBus<(PA11<AF14>, PA12<AF14>)>>,
+    usb_dev: &mut UsbDevice<'static, UsbBus<Peripheral>>,
     keyboard: &mut KeyboardHidClass,
 ) {
     if usb_dev.poll(&mut [keyboard]) {

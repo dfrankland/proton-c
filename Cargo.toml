@@ -14,7 +14,7 @@ exclude = ["images/**/*"]
 
 [dependencies]
 embedded-hal = "0.2.3"
-stm32f3xx-hal = { version = "0.2.3", features = ["rt", "stm32f303"] }
+stm32f3xx-hal = { git = "https://github.com/stm32-rs/stm32f3xx-hal", rev = "35c6c2d68bd674cb311a8e7a2ab001ae48dce069", features = ["rt", "stm32f303xc"] }
 
 [dev-dependencies]
 alloc-cortex-m = "0.3.5"
@@ -23,14 +23,13 @@ cortex-m-rt = "0.6.10"
 cortex-m-rtfm = { version = "0.4.3", features = ["timer-queue"] }
 cortex-m-semihosting = "0.3.5"
 panic-semihosting = "0.5.3"
-stm32-usbd = { version = "0.3.0", features = ["stm32f303xc"] }
 usb-device = "0.2.3"
 
 [dev-dependencies.stm32f3xx-hal]
-version = "0.2.3"
-features = ["rt", "stm32f303", "unproven"]
-# git = "https://github.com/dfrankland/stm32f3xx-hal"
-# branch = "master"
+# version = "0.3.0"
+features = ["rt", "stm32f303xc", "unproven", "stm32-usbd"]
+git = "https://github.com/stm32-rs/stm32f3xx-hal"
+rev = "35c6c2d68bd674cb311a8e7a2ab001ae48dce069"
 
 [features]
 default = ["rt"]

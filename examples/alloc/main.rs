@@ -60,7 +60,7 @@ const APP: () = {
         let gpioc = device.GPIOC.split(&mut rcc.ahb);
 
         let mut led = Led::new(gpioc);
-        led.on().unwrap();
+        led.set_high().unwrap();
 
         schedule.ping(Instant::now()).unwrap();
 

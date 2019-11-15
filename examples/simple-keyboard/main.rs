@@ -9,7 +9,6 @@ pub mod matrix;
 
 use crate::{keyboard::Keyboard, matrix::Matrix};
 use cortex_m::asm::delay;
-use embedded_hal::digital::v2::OutputPin;
 use proton_c::led::Led;
 use rtfm::app;
 use stm32f3xx_hal::{
@@ -56,7 +55,7 @@ const APP: () = {
         let gpioc = device.GPIOC.split(&mut rcc.ahb);
 
         let mut led = Led::new(gpioc);
-        led.on().expect("Couldn't turn the LED on!");
+        led.set_high().expect("Couldn't turn the LED on!");
 
         // Pull the D+ pin down to send a RESET condition to the USB bus.
         let mut usb_dp = gpioa

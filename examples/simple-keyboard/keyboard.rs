@@ -1,5 +1,6 @@
 use crate::hid::{HidDevice, Protocol, ReportType, Subclass};
 use proton_c::led::Led;
+use stm32f3xx_hal::prelude::*;
 
 const REPORT_DESCRIPTOR: &[u8] = &[
     0x05, 0x01, 0x09, 0x06, 0xA1, 0x01, 0x05, 0x07, 0x19, 0xE0, 0x29, 0xE7, 0x15, 0x00, 0x25, 0x01,
@@ -50,9 +51,9 @@ impl HidDevice for Keyboard {
     ) -> Result<(), ()> {
         if report_type == ReportType::Output && report_id == 0 && data.len() == 1 {
             if data[0] & 1 << 1 != 0 {
-                return self.led.off();
+                return self.led.set_low();
             } else {
-                return self.led.on();
+                return self.led.set_high();
             }
         }
         Err(())

@@ -7,30 +7,31 @@ extern crate panic_semihosting;
 mod cdc_acm;
 
 use cortex_m::asm::delay;
-use embedded_hal::digital::v2::OutputPin;
 use rtfm::app;
-use stm32_usbd::{UsbBus, UsbBusType};
-use stm32f3xx_hal::{prelude::*, stm32};
+use stm32f3xx_hal::{prelude::*, usb::{Peripheral, UsbBus}};
 use usb_device::{bus, prelude::*};
 
 #[app(device = stm32f3xx_hal::stm32)]
 const APP: () = {
-    static mut USB_DEV: UsbDevice<'static, UsbBusType> = ();
-    static mut SERIAL: cdc_acm::SerialPort<'static, UsbBusType> = ();
+    static mut USB_DEV: UsbDevice<'static, UsbBus<Peripheral>> = ();
+    static mut SERIAL: cdc_acm::SerialPort<'static, UsbBus<Peripheral>> = ();
 
     #[init]
     fn init() {
-        static mut USB_BUS: Option<bus::UsbBusAllocator<UsbBusType>> = None;
+        static mut USB_BUS: Option<bus::UsbBusAllocator<UsbBus<Peripheral>>> = None;
 
         let mut flash = device.FLASH.constrain();
         let mut rcc = device.RCC.constrain();
 
         let clocks = rcc
             .cfgr
+            .use_hse(8.mhz())
             .sysclk(48.mhz())
             .pclk1(24.mhz())
             .pclk2(24.mhz())
             .freeze(&mut flash.acr);
+
+        assert!(clocks.usbclk_valid());
 
         let mut gpioa = device.GPIOA.split(&mut rcc.ahb);
         let mut gpioc = device.GPIOC.split(&mut rcc.ahb);
@@ -51,9 +52,12 @@ const APP: () = {
         let usb_dm = gpioa.pa11.into_af14(&mut gpioa.moder, &mut gpioa.afrh);
         let usb_dp = usb_dp.into_af14(&mut gpioa.moder, &mut gpioa.afrh);
 
-        configure_usb_clock();
-
-        *USB_BUS = Some(UsbBus::new(device.USB, (usb_dm, usb_dp)));
+        let usb = Peripheral {
+            usb: device.USB,
+            pin_dm: usb_dm,
+            pin_dp: usb_dp,
+        };
+        *USB_BUS = Some(UsbBus::new(usb));
 
         let serial = cdc_acm::SerialPort::new(USB_BUS.as_ref().unwrap());
 
@@ -102,9 +106,4 @@ fn usb_poll<B: bus::UsbBus>(
         }
         _ => {}
     }
-}
-
-fn configure_usb_clock() {
-    let rcc = unsafe { &*stm32::RCC::ptr() };
-    rcc.cfgr.modify(|_, w| w.usbpre().set_bit());
 }
